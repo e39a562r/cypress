@@ -49,7 +49,8 @@ const moduleFactory = () => {
     },
 
     launch (browser, spec, options = {}) {
-      debug('resetting project state, preparing to launch browser')
+      debug('resetting project state, preparing to launch browser %s for spec %o options %o',
+        browser.name, spec, options)
 
       la(_.isPlainObject(browser), 'expected browser object:', browser)
 
@@ -58,6 +59,8 @@ const moduleFactory = () => {
       return this.reset()
       .then(() => openProject.getSpecUrl(spec.absolute))
       .then((url) => {
+        debug('open project url %s', url)
+
         return openProject.getConfig()
         .then((cfg) => {
           options.browsers = cfg.browsers
@@ -189,13 +192,25 @@ const moduleFactory = () => {
           createSpecsWatcher(cfg)
 
           return specsUtil.find(cfg)
-        })
-        // TODO: put back 'integration' property
-        // on the specs
-        .then((specs = []) => {
-          return {
-            integration: specs,
-          }
+          // TODO: put back 'integration' property on the specs
+          .then((specs = []) => {
+            // TODO merge logic with "run.js"
+            if (debug.enabled) {
+              const names = _.map(specs, 'name')
+
+              // TODO use pluralize to form good debug message
+              debug(
+                'found \'%d\' specs using spec pattern \'%s\': %o',
+                names.length,
+                cfg.testFiles,
+                names
+              )
+            }
+
+            return {
+              integration: specs,
+            }
+          })
         })
       }
 
